@@ -18,7 +18,9 @@
       "Write",
       "Edit",
       "Glob",
-      "Grep"
+      "Grep",
+      "PowerShell(\"=== .env.example ===\"; Get-Content .env.example -ErrorAction SilentlyContinue; \"=== knowledge ===\"; Get-ChildItem knowledge -Force -Name)",
+      "PowerShell(git check-ignore *)"
     ]
   }
 }

@@ -1,5 +1,11 @@
-# Secretos — NUNCA subir a GitHub
+# ════════════════════════════════════════════════════════════
+# SECRETOS — NUNCA subir a GitHub
+# ════════════════════════════════════════════════════════════
 .env
+.env.local
+credentials.json
+*.key
+*.pem
 
 # Base de datos local
 *.db
@@ -21,14 +27,6 @@ build/
 knowledge/*
 !knowledge/.gitkeep
 
-# Archivos generados por Claude Code durante onboarding
-agent/
-config/
-tests/
-requirements.txt
-Dockerfile
-docker-compose.yml
-
 # Session state
 config/session.yaml
 
@@ -48,3 +46,9 @@ Thumbs.db
 
 # Node (si se usa para Claude Code)
 node_modules/
+
+# Audios temporales
+*.ogg
+*.mp3
+*.wav
+/tmp/

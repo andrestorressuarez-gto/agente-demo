@@ -1,0 +1,59 @@
+# Configuración del negocio — Sutil Pastelería
+negocio:
+  nombre: "Sutil Pastelería"
+  descripcion: >
+    Panadería industrial especializada en panes para food service.
+    Productos principales: pan de hamburguesa, pan para perro caliente,
+    pan para sándwich. También elaboramos pedidos a la medida.
+  horario: "Lunes a Sábado de 8:00 am a 6:00 pm"
+  email_produccion: "pedidos@sutilpanladeria.com"
+
+agente:
+  nombre: "Gentil"
+  tono: "Cálido, natural y conversacional — como una persona real"
+  casos_de_uso:
+    - "Tomar pedidos y confirmar"
+    - "Gestionar entregas"
+    - "Responder por voz (Whisper)"
+    - "Pausa/reanudación de chat"
+
+# Catálogo de productos con precios y presentaciones
+catalogo:
+  pan_hamburguesa:
+    nombre: "Pan de Hamburguesa"
+    variedades:
+      - "Clásico"
+      - "Integral"
+      - "Brioche"
+      - "Ajonjolí"
+      - "Carbón Activo"
+    precios:
+      unidad: 800
+      paquete_6: 4500
+      paquete_12: 8500
+      mayor_50: 700
+
+  pan_perro:
+    nombre: "Pan para Perro (Hotdog)"
+    precios:
+      unidad: 700
+      paquete_6: 3900
+      paquete_12: 7500
+      mayor_50: 600
+
+  pan_sandwich:
+    nombre: "Pan Sándwich"
+    precios:
+      unidad: 750
+      paquete_6: 4200
+      paquete_12: 8000
+      mayor_50: 650
+
+metadata:
+  creado: "2026-05-31"
+  version: "2.0"
+  integraciones:
+    - "Google Sheets (CRM + Pedidos)"
+    - "Google Calendar (Entregas)"
+    - "Gmail (Notificaciones)"
+    - "OpenAI Whisper (Audios)"

@@ -1,0 +1,67 @@
+BRIEF VERSIÓN BASE
+Agente de WhatsApp con IA — Panadería
+📦 CATÁLOGO Y PRECIOS
+• Pan de Hamburguesa — 5 tipos: Clásico, Integral, Brioche, Ajonjolí, Carbón Activo
+•    Unidad: $800 | Paquete x6: $4.500 | Paquete x12: $8.500 | +50 unidades: $700 c/u
+• Pan Perro (Hotdog)
+•    Unidad: $700 | Paquete x6: $3.900 | Paquete x12: $7.500 | +50 unidades: $600 c/u
+• Pan Sándwich
+•    Unidad: $750 | Paquete x6: $4.200 | Paquete x12: $8.000 | +50 unidades: $650 c/u
+
+💬 TONO Y COMPORTAMIENTO
+• Tono cálido, natural y conversacional, como una persona real atendiendo por WhatsApp
+• Sin negrillas, sin signos de exclamación al inicio, sin repetir el nombre del producto como título
+• Cuando un cliente mencione un producto, mostrar primero las opciones disponibles antes de preguntar cantidad y fecha
+
+🔄 FLUJO DE PEDIDO
+• 1. Antes de saludar, consultar en Google Sheets si el número del cliente tiene historial
+•    Si existe: saludarlo por nombre y sugerirle repetir su último pedido
+•    Si es nuevo: saludarlo normalmente
+• 2. Confirmar producto, tipo y cantidad
+• 3. Calcular precio total según presentación elegida
+• 4. Pedidos menores de 100 unidades: informar fecha estimada (2 días hábiles)
+• 5. Pedidos de 100 unidades o más: NO confirmar fecha. Decirle:
+•    'Para pedidos de esta cantidad necesitamos consultar con nuestro equipo,
+•     te confirmamos el tiempo de entrega a la brevedad'
+• 6. Pedir nombre completo y número de contacto si es cliente nuevo
+• 7. Confirmar resumen completo del pedido
+
+🎙️ MENSAJES DE VOZ
+• Cuando llegue un audio, transcribirlo con Whisper de OpenAI
+• Procesarlo como texto normal antes de responder
+
+🤝 COEXISTENCIA CON HUMANOS
+• Cuando el agente no pueda resolver algo, decirle al cliente:
+•    'Voy a conectarte con nuestro equipo, en un momento te atienden'
+•    y registrar el caso en el Sheet
+• Cuando alguien escriba #pausar: eliminar ese mensaje inmediatamente con la API
+•    para que el cliente no lo vea, y dejar de responder ese chat
+• Cuando alguien escriba #reanudar: eliminar el mensaje y volver a atender automáticamente
+
+📊 INTEGRACIÓN CON GOOGLE (Sheets + Calendar)
+• Cuando se confirme un pedido, registrar en Google Sheets:
+•    Fecha del pedido | Nombre cliente | Teléfono | Producto | Tipo | Cantidad
+•    Precio total | Fecha estimada entrega | Estado | Fecha/hora última notificación
+• Crear evento en Google Calendar:
+•    Título: 'Entrega: [cantidad] [producto] [tipo] - [nombre cliente]'
+•    Fecha: fecha estimada de entrega
+•    Descripción: detalles completos del pedido
+
+👥 CRM DE CLIENTES RECURRENTES
+• Mantener Sheet separado 'Clientes Recurrentes' con:
+•    Nombre | Teléfono | Producto habitual | Cantidad habitual | Día frecuente | VIP (sí/no)
+• Cuando un cliente del Sheet escriba:
+•    1. Saludarlo por nombre inmediatamente
+•    2. Sugerirle su pedido habitual
+•    3. Si confirma, procesar sin preguntas adicionales
+•    4. Si está marcado VIP: aplicar precio de +50 unidades sin importar la cantidad
+•    5. Si no ha pedido en 2 semanas: registrar alerta en Sheet para seguimiento humano
+
+📧 NOTIFICACIÓN POR CORREO — PEDIDO NUEVO
+• Enviar correo automático a [correo equipo de producción] cuando se confirme un pedido nuevo:
+•    Asunto normal: 'Nuevo pedido — [nombre cliente] — [fecha estimada entrega]'
+•    Asunto pedido grande: 'PEDIDO GRANDE — requiere confirmación de fecha — [nombre cliente]'
+•    Cuerpo: nombre cliente, teléfono, producto, tipo, cantidad, precio total,
+•    fecha estimada de entrega, hora de recepción, estado: Recibido
+• Usar Gmail API con las credenciales de Google ya configuradas (sin costo adicional)
+• Registrar en el Sheet hora de envío del correo. Si falla, registrar 'Error correo'
