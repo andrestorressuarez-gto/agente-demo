@@ -58,9 +58,14 @@ class ProveedorTwilio(ProveedorWhatsApp):
         url = f"https://api.twilio.com/2010-04-01/Accounts/{self.account_sid}/Messages.json"
         auth = base64.b64encode(f"{self.account_sid}:{self.auth_token}".encode()).decode()
         headers = {"Authorization": f"Basic {auth}"}
+
+        # Limpiar números: remover "whatsapp:" si existe, luego agregar correctamente
+        numero_from = self.phone_number.replace("whatsapp:", "")
+        numero_to = telefono.replace("whatsapp:", "")
+
         data = {
-            "From": f"whatsapp:{self.phone_number}",
-            "To": f"whatsapp:{telefono}",
+            "From": f"whatsapp:{numero_from}",
+            "To": f"whatsapp:{numero_to}",
             "Body": mensaje,
         }
         async with httpx.AsyncClient() as client:
