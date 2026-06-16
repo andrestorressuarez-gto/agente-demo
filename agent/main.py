@@ -31,7 +31,7 @@ logging.basicConfig(level=log_level)
 logger = logging.getLogger("agentkit")
 
 proveedor = obtener_proveedor()
-PORT = int(os.getenv("PORT", 8000))
+PORT = int(os.getenv("PORT", 8080))
 
 
 @asynccontextmanager
