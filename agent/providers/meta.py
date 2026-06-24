@@ -1,5 +1,5 @@
 # agent/providers/meta.py — Adaptador para Meta WhatsApp Cloud API
-# Generado por AgentKit
+# Generado por AgentKit (Corregido)
 
 import os
 import logging
@@ -38,26 +38,7 @@ class ProveedorMeta(ProveedorWhatsApp):
 
     async def parsear_webhook(self, request: Request) -> list[MensajeEntrante]:
         """
-        Parsea el payload JSON de Meta Cloud API.
-        Estructura:
-        {
-          "object": "whatsapp_business_account",
-          "entry": [{
-            "id": "...",
-            "changes": [{
-              "value": {
-                "messaging_product": "whatsapp",
-                "messages": [{
-                  "from": "34123456789",
-                  "id": "wamid.xxx",
-                  "type": "text",
-                  "text": {"body": "Hola"}
-                }],
-                ...
-              }
-            }]
-          }]
-        }
+        Parsea el payload JSON de Meta Cloud API diferenciando mensajes de estados.
         """
         try:
             body = await request.json()
@@ -71,13 +52,28 @@ class ProveedorMeta(ProveedorWhatsApp):
             for change in entry.get("changes", []):
                 value = change.get("value", {})
 
-                # Procesar mensajes entrantes
-                for msg in value.get("messages", []):
-                    # Solo procesar mensajes de texto por ahora
-                    if msg.get("type") == "text":
+                # 1. Ignorar explícitamente los eventos de estado para no mezclarlos con mensajes
+                if "statuses" in value:
+                    logger.info("Log Meta: Se recibió notificación de estado (sent/delivered/read). Ignorando para respuesta.")
+                    continue
+
+                # 2. Procesar mensajes entrantes de los clientes
+                if "messages" in value:
+                    for msg in value.get("messages", []):
                         telefono = msg.get("from", "")
-                        texto = msg.get("text", {}).get("body", "")
                         mensaje_id = msg.get("id", "")
+                        tipo_msg = msg.get("type")
+                        texto = ""
+
+                        # Si el cliente envió Texto
+                        if tipo_msg == "text":
+                            texto = msg.get("text", {}).get("body", "")
+                        
+                        # Si el cliente envió un Audio (Bypass para que main.py lo procese)
+                        elif tipo_msg == "audio":
+                            audio_id = msg.get("audio", {}).get("id", "")
+                            texto = f"audio:{audio_id}"
+                            logger.info(f"Log Meta: Audio detectado en webhook. ID de media: {audio_id}")
 
                         if telefono and texto:
                             mensajes.append(MensajeEntrante(
@@ -86,14 +82,14 @@ class ProveedorMeta(ProveedorWhatsApp):
                                 mensaje_id=mensaje_id,
                                 es_propio=False,
                             ))
-                            logger.debug(f"Mensaje Meta parseado: {telefono} → {texto}")
+                            logger.info(f"📩 ¡Mensaje entrante capturado con éxito! {telefono} → '{texto[:40]}'")
 
         return mensajes
 
     async def enviar_mensaje(self, telefono: str, mensaje: str) -> bool:
         """
         Envía mensaje via Meta WhatsApp Cloud API.
-        Endpoint: POST /v21.0/{PHONE_NUMBER_ID}/messages
+        Endpoint corregido a graph.facebook.com
         """
         if not self.whatsapp_token or not self.phone_number_id:
             logger.warning(
@@ -103,7 +99,8 @@ class ProveedorMeta(ProveedorWhatsApp):
             )
             return False
 
-        url = f"https://graph.instagram.com/{self.api_version}/{self.phone_number_id}/messages"
+        # CORREGIDO: De instagram.com a facebook.com
+        url = f"https://graph.facebook.com/{self.api_version}/{self.phone_number_id}/messages"
 
         headers = {
             "Authorization": f"Bearer {self.whatsapp_token}",
@@ -122,11 +119,11 @@ class ProveedorMeta(ProveedorWhatsApp):
                 r = await client.post(url, json=payload, headers=headers)
 
                 if r.status_code == 200:
-                    logger.info(f"Mensaje enviado a {telefono} via Meta")
+                    logger.info(f"🚀 Respuesta enviada con éxito a {telefono} vía Meta API")
                     return True
                 else:
                     logger.error(
-                        f"Error Meta API ({r.status_code}): {r.text}"
+                        f"❌ Error en Meta API al responder ({r.status_code}): {r.text}"
                     )
                     return False
 
