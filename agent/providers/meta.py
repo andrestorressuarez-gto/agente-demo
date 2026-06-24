@@ -30,7 +30,7 @@ class ProveedorMeta(ProveedorWhatsApp):
         challenge = params.get("hub.challenge")
 
         if mode == "subscribe" and token == self.webhook_verify_token:
-            logger.info(f"Webhook verificado por Meta")
+            logger.info("Webhook verificado por Meta")
             return int(challenge)
 
         logger.warning(f"Intento de verificación fallido: mode={mode}, token={token}")
@@ -52,12 +52,11 @@ class ProveedorMeta(ProveedorWhatsApp):
             for change in entry.get("changes", []):
                 value = change.get("value", {})
 
-                # 1. Ignorar explícitamente los eventos de estado para no mezclarlos con mensajes
+                # Ignorar statuses pero NO hacer continue — seguir procesando messages
                 if "statuses" in value:
-                    logger.info("Log Meta: Se recibió notificación de estado (sent/delivered/read). Ignorando para respuesta.")
-                    continue
+                    logger.info("Log Meta: Notificación de estado (sent/delivered/read). Ignorando statuses.")
 
-                # 2. Procesar mensajes entrantes de los clientes
+                # Procesar mensajes entrantes siempre que existan, independiente de statuses
                 if "messages" in value:
                     for msg in value.get("messages", []):
                         telefono = msg.get("from", "")
@@ -65,15 +64,15 @@ class ProveedorMeta(ProveedorWhatsApp):
                         tipo_msg = msg.get("type")
                         texto = ""
 
-                        # Si el cliente envió Texto
+                        # Si el cliente envió texto
                         if tipo_msg == "text":
                             texto = msg.get("text", {}).get("body", "")
-                        
-                        # Si el cliente envió un Audio (Bypass para que main.py lo procese)
+
+                        # Si el cliente envió un audio
                         elif tipo_msg == "audio":
                             audio_id = msg.get("audio", {}).get("id", "")
                             texto = f"audio:{audio_id}"
-                            logger.info(f"Log Meta: Audio detectado en webhook. ID de media: {audio_id}")
+                            logger.info(f"Log Meta: Audio detectado. ID de media: {audio_id}")
 
                         if telefono and texto:
                             mensajes.append(MensajeEntrante(
@@ -82,14 +81,13 @@ class ProveedorMeta(ProveedorWhatsApp):
                                 mensaje_id=mensaje_id,
                                 es_propio=False,
                             ))
-                            logger.info(f"📩 ¡Mensaje entrante capturado con éxito! {telefono} → '{texto[:40]}'")
+                            logger.info(f"Mensaje entrante capturado: {telefono} -> '{texto[:40]}'")
 
         return mensajes
 
     async def enviar_mensaje(self, telefono: str, mensaje: str) -> bool:
         """
         Envía mensaje via Meta WhatsApp Cloud API.
-        Endpoint corregido a graph.facebook.com
         """
         if not self.whatsapp_token or not self.phone_number_id:
             logger.warning(
@@ -99,7 +97,6 @@ class ProveedorMeta(ProveedorWhatsApp):
             )
             return False
 
-        # CORREGIDO: De instagram.com a facebook.com
         url = f"https://graph.facebook.com/{self.api_version}/{self.phone_number_id}/messages"
 
         headers = {
@@ -119,11 +116,11 @@ class ProveedorMeta(ProveedorWhatsApp):
                 r = await client.post(url, json=payload, headers=headers)
 
                 if r.status_code == 200:
-                    logger.info(f"🚀 Respuesta enviada con éxito a {telefono} vía Meta API")
+                    logger.info(f"Respuesta enviada con exito a {telefono} via Meta API")
                     return True
                 else:
                     logger.error(
-                        f"❌ Error en Meta API al responder ({r.status_code}): {r.text}"
+                        f"Error en Meta API ({r.status_code}): {r.text}"
                     )
                     return False
 
