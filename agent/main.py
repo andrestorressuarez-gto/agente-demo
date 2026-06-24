@@ -60,10 +60,28 @@ async def health_check():
 @app.get("/webhook")
 async def webhook_verificacion(request: Request):
     """Verificación GET del webhook (Meta Cloud API)."""
+    # 1. Extraemos los parámetros de Meta directamente desde la URL
+    params = request.query_params
+    mode = params.get("hub.mode")
+    token = params.get("hub.verify_token")
+    challenge = params.get("hub.challenge")
+
+    # 2. Leemos la variable de entorno de Railway, usando tu token como respaldo directo
+    token_esperado = os.getenv("WEBHOOK_VERIFY_TOKEN", "Mimamamemima23")
+
+    # 3. Si es una solicitud de Meta y el token coincide, respondemos con el challenge puro
+    if mode == "subscribe" and token == token_esperado:
+        if challenge:
+            logger.info(f"¡Handshake de Meta exitoso directo en main.py! Challenge: {challenge}")
+            return PlainTextResponse(content=str(challenge), status_code=200)
+
+    # 4. Si no coincide con el bypass, dejamos la lógica del proveedor original como plan B
     resultado = await proveedor.validar_webhook(request)
     if resultado is not None:
         return PlainTextResponse(str(resultado))
-    return {"status": "ok"}
+
+    # 5. Si todo lo anterior falla, respondemos con un error limpio (no con "status ok")
+    return PlainTextResponse(content="Token de verificación inválido o parámetros incompletos", status_code=403)
 
 
 @app.post("/webhook")
@@ -125,8 +143,8 @@ async def webhook_handler(request: Request):
             # Inyectar contexto de cliente recurrente en el historial si existe
             if contexto_cliente:
                 prefijo = f"[Cliente recurrente: {contexto_cliente['nombre']}, " \
-                         f"compra habitualmente: {contexto_cliente['producto_habitual']}, " \
-                         f"es VIP: {contexto_cliente['es_vip']}]"
+                          f"compra habitualmente: {contexto_cliente['producto_habitual']}, " \
+                          f"es VIP: {contexto_cliente['es_vip']}]"
                 historial.insert(0, {"role": "system", "content": prefijo})
 
             # Generar respuesta

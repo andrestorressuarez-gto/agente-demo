@@ -52,3 +52,4 @@ node_modules/
 *.mp3
 *.wav
 /tmp/
+.aider*
